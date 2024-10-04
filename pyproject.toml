@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cuttlefish"
+version = "1.0"
+authors = [
+    { name = "Satrio Wibowo", email = "satrio.biology@yahoo.com" }
+]
+readme = "README.md"
+requires-python = ">=3.11.5"
+description = "cuttlefish"
+keywords = []
+dependencies = []
+
+[project.scripts]
+cuttlefish = "cuttlefish.main:main"
