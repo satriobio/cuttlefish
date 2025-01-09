@@ -12,9 +12,13 @@ def list_positions():
     for i, position in enumerate(positions):
         print(f"{i}: {position.name}")
 
-def run_until(position_index, runtime=None, pores=None, action="pause"):
-    if runtime is None and pores is None:
-        print("Error: At least one of --runtime or --pores must be provided.")
+
+def run_until(position_index, runtime=None, pores=None, action="pause", clear=False):
+    if clear:
+        runtime, pores, action = None, None, "pause"
+        
+    if runtime is None and pores is None and clear is False:
+        print("Error: At least one of --runtime or --pores must be provided (unless --clear is specified).")
         return
 
     manager = Manager()
@@ -56,14 +60,16 @@ def run_until(position_index, runtime=None, pores=None, action="pause"):
     connection = selected_position.connect()
     run = connection.protocol.get_current_protocol_run()
     acquisition_run_id = run.acquisition_run_ids[-1]
+
     try:
         connection.run_until.write_target_criteria(acquisition_run_id=acquisition_run_id, **target_criteria)
-        print('Protocol updated')
+        print("Protocol updated")
+        connection.protocol.resume_protocol()
+        print("Protocol resumed")
     except Exception as e:
         print(e)
-        print('Is the run still ongoing?')
+        print("Is the run still ongoing?")
 
-    return
 
 def main():
     parser = argparse.ArgumentParser(prog="cuttlefish", description="Control nanopore devices with MinKNOW API")
@@ -78,13 +84,15 @@ def main():
     rununtil_parser.add_argument("--runtime", type=int, help="Runtime in seconds")
     rununtil_parser.add_argument("--pores", type=float, help="Available pores threshold (percentage)")
     rununtil_parser.add_argument("--type", type=str, choices=["stop", "pause"], default="pause", help="Action type: stop or pause")
+    rununtil_parser.add_argument("--clear", action="store_true", help="Clear criteria and set default pause action")
 
     args = parser.parse_args()
 
     if args.command == "list":
         list_positions()
     elif args.command == "rununtil":
-        run_until(args.position, args.runtime, args.pores, args.type)
+        run_until(args.position, args.runtime, args.pores, args.type, args.clear)
+
 
 if __name__ == "__main__":
     main()
